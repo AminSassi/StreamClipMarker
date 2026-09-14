@@ -22,6 +22,7 @@ namespace StreamClipMarker
         private int _countdownRemaining;
 
         private double _lastMarkerRawSeconds = -999;
+        private string _lastMarkerFormatted = "--:--:--";
         private string _lastExportedTxtPath = "";
         private string _lastExportedFolder = "";
         private bool _isExiting = false;
@@ -33,6 +34,7 @@ namespace StreamClipMarker
         private Button _btnSettings;
         private Label _lblClock;
         private Label _lblStatus;
+        private Label _lblRecordingFile;
         private Button _btnMarkClip;
         private Label _lblClipsCount;
         private ListView _lstMarkers;
@@ -53,8 +55,10 @@ namespace StreamClipMarker
         private enum SessionState
         {
             Idle,
+            WaitingForRecording,
             Countdown,
             Active,
+            Finalizing,
             Ended
         }
         private SessionState _state = SessionState.Idle;
@@ -68,8 +72,8 @@ namespace StreamClipMarker
         private void InitializeComponent()
         {
             Text = "StreamClipMarker";
-            Size = new Size(410, 620);
-            MinimumSize = new Size(390, 540);
+            Size = new Size(410, 640);
+            MinimumSize = new Size(390, 560);
             StartPosition = FormStartPosition.CenterScreen;
             BackColor = Color.FromArgb(20, 21, 26);
             ForeColor = Color.White;
@@ -90,7 +94,7 @@ namespace StreamClipMarker
                 BackColor = Color.FromArgb(26, 28, 35)
             };
 
-            // Sleek mini logo badge in header
+            // Mini logo badge
             _picLogo = new PictureBox
             {
                 Location = new Point(14, 10),
@@ -130,62 +134,76 @@ namespace StreamClipMarker
             pnlHeader.Controls.Add(_btnSettings);
             Controls.Add(pnlHeader);
 
-            // Center / Main Container
+            // Center Container
             Panel pnlMain = new Panel
             {
                 Dock = DockStyle.Fill,
-                Padding = new Padding(16, 12, 16, 12),
+                Padding = new Padding(16, 8, 16, 8),
                 BackColor = Color.FromArgb(20, 21, 26)
             };
             Controls.Add(pnlMain);
 
-            int curY = 6;
+            int curY = 4;
 
-            // Stopwatch Display
+            // Stopwatch Clock
             _lblClock = new Label
             {
                 Text = "00:00:00",
                 Location = new Point(0, curY),
-                Size = new Size(378, 52),
+                Size = new Size(378, 48),
                 TextAlign = ContentAlignment.MiddleCenter,
                 Font = new Font("Consolas", 32f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(240, 245, 255),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
             pnlMain.Controls.Add(_lblClock);
-            curY += 56;
+            curY += 50;
 
-            // Status Indicator
+            // Status Indicator (State Machine Display)
             _lblStatus = new Label
             {
                 Text = "○ IDLE",
                 Location = new Point(0, curY),
-                Size = new Size(378, 22),
+                Size = new Size(378, 20),
                 TextAlign = ContentAlignment.MiddleCenter,
                 Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(130, 140, 155),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
             pnlMain.Controls.Add(_lblStatus);
-            curY += 28;
+            curY += 22;
+
+            // Detected Filename Label
+            _lblRecordingFile = new Label
+            {
+                Text = "",
+                Location = new Point(0, curY),
+                Size = new Size(378, 18),
+                TextAlign = ContentAlignment.MiddleCenter,
+                Font = new Font("Segoe UI", 8.25f, FontStyle.Italic),
+                ForeColor = Color.FromArgb(140, 180, 210),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
+            pnlMain.Controls.Add(_lblRecordingFile);
+            curY += 22;
 
             // Mark Clip Button
             _btnMarkClip = new Button
             {
                 Text = "MARK CLIP — F8",
                 Location = new Point(14, curY),
-                Size = new Size(350, 48),
+                Size = new Size(350, 46),
                 BackColor = Color.FromArgb(0, 168, 107),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+                Font = new Font("Segoe UI", 11.5f, FontStyle.Bold),
                 Cursor = Cursors.Hand,
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
             _btnMarkClip.FlatAppearance.BorderSize = 0;
-            _btnMarkClip.Click += (s, e) => TriggerClipMark(true);
+            _btnMarkClip.Click += (s, e) => TriggerClipMark(true, false);
             pnlMain.Controls.Add(_btnMarkClip);
-            curY += 56;
+            curY += 52;
 
             // Clips Count & Offset bar
             Panel pnlStats = new Panel
@@ -259,13 +277,13 @@ namespace StreamClipMarker
             pnlStats.Controls.Add(_btnOffsetPlus);
 
             pnlMain.Controls.Add(pnlStats);
-            curY += 32;
+            curY += 30;
 
             // Markers List View
             _lstMarkers = new ListView
             {
                 Location = new Point(14, curY),
-                Size = new Size(350, 190),
+                Size = new Size(350, 195),
                 View = View.Details,
                 FullRowSelect = true,
                 GridLines = false,
@@ -279,12 +297,13 @@ namespace StreamClipMarker
             _lstMarkers.Columns.Add("#", 38);
             _lstMarkers.Columns.Add("Marker", 78);
             _lstMarkers.Columns.Add("Clip Range", 130);
-            _lstMarkers.Columns.Add("Note", 90);
+            _lstMarkers.Columns.Add("Note / Label", 90);
+            _lstMarkers.DoubleClick += (s, e) => MenuEdit_Click(s, e);
             pnlMain.Controls.Add(_lstMarkers);
 
             // Context Menu for Markers
             _markerContextMenu = new ContextMenuStrip();
-            ToolStripMenuItem menuEdit = new ToolStripMenuItem("Edit Note / Marker");
+            ToolStripMenuItem menuEdit = new ToolStripMenuItem("Edit Note / Label");
             menuEdit.Click += MenuEdit_Click;
             ToolStripMenuItem menuDelete = new ToolStripMenuItem("Delete Selected Marker");
             menuDelete.Click += MenuDelete_Click;
@@ -391,7 +410,7 @@ namespace StreamClipMarker
             _trayMenuAction.Click += (s, e) => BtnSessionAction_Click(s, e);
 
             ToolStripMenuItem menuMark = new ToolStripMenuItem("🎬 Mark Clip (F8)");
-            menuMark.Click += (s, e) => TriggerClipMark(false);
+            menuMark.Click += (s, e) => TriggerClipMark(false, false);
 
             ToolStripMenuItem menuSettings = new ToolStripMenuItem("⚙️ Settings");
             menuSettings.Click += BtnSettings_Click;
@@ -409,12 +428,33 @@ namespace StreamClipMarker
 
             _trayIcon = new NotifyIcon
             {
-                Text = "StreamClipMarker (F8 to Mark Clip)",
+                Text = "StreamClipMarker",
                 Icon = AppBranding.GetAppIcon(),
                 ContextMenuStrip = _trayContextMenu,
                 Visible = true
             };
             _trayIcon.DoubleClick += (s, e) => ShowFromTray();
+            UpdateTrayTooltip();
+        }
+
+        private void UpdateTrayTooltip()
+        {
+            if (_trayIcon == null) return;
+            string stateStr = (_state == SessionState.Active) ? "ACTIVE" :
+                              (_state == SessionState.WaitingForRecording) ? "WAITING" : "IDLE";
+            int count = (_currentSession != null) ? _currentSession.Markers.Count : 0;
+
+            // Keep within 63 characters for safety on all Windows versions
+            string tip = string.Format("StreamClipMarker\nRec: {0} | Clips: {1}\nLast: {2}", stateStr, count, _lastMarkerFormatted);
+            if (tip.Length > 63)
+            {
+                tip = string.Format("StreamClipMarker: {0}\nClips: {1}", stateStr, count);
+            }
+            try
+            {
+                _trayIcon.Text = tip;
+            }
+            catch { }
         }
 
         private void InitializeApp()
@@ -422,18 +462,19 @@ namespace StreamClipMarker
             _config = AppConfig.Load();
             _timer = new SessionTimer();
             _hotkeyManager = new HotkeyManager();
-            _hotkeyManager.HotkeyPressed += HotkeyManager_HotkeyPressed;
+            _hotkeyManager.HotkeyPressed += (s, e) => HotkeyManager_HotkeyPressed(false);
+            _hotkeyManager.MarkWithLabelPressed += (s, e) => HotkeyManager_HotkeyPressed(true);
             _toast = new ToastFeedback();
 
             _clockTimer = new Timer();
-            _clockTimer.Interval = 1000; // 1 second tick = zero CPU impact
+            _clockTimer.Interval = 1000;
             _clockTimer.Tick += ClockTimer_Tick;
 
             _countdownTimer = new Timer();
             _countdownTimer.Interval = 1000;
             _countdownTimer.Tick += CountdownTimer_Tick;
 
-            // Auto-detection engine (Start and Stop)
+            // Auto-detection engine
             _recordingDetector = new RecordingDetector(_config.AutoDetectRecording, _config.WatchedRecordingFolder);
             _recordingDetector.RecordingStarted += RecordingDetector_RecordingStarted;
             _recordingDetector.RecordingStopped += RecordingDetector_RecordingStopped;
@@ -441,9 +482,17 @@ namespace StreamClipMarker
 
             UpdateHotkeyBinding();
             UpdateOffsetDisplay();
-            SetState(SessionState.Idle);
 
-            // Crash Recovery Check
+            if (_config.AutoDetectRecording)
+            {
+                SetState(SessionState.WaitingForRecording);
+            }
+            else
+            {
+                SetState(SessionState.Idle);
+            }
+
+            // Enhanced Crash Recovery Check (Resume / Finalize / Delete)
             CheckForUnfinishedSession();
         }
 
@@ -473,14 +522,15 @@ namespace StreamClipMarker
 
         private void OnAutoRecordingStarted(RecordingEventArgs e)
         {
-            if (_state == SessionState.Idle || _state == SessionState.Ended)
+            if (_state == SessionState.Idle || _state == SessionState.WaitingForRecording || _state == SessionState.Ended)
             {
+                _lblRecordingFile.Text = string.IsNullOrEmpty(e.Details) ? "" : "File: " + e.Details;
                 BeginLiveSession();
 
                 string detailMsg = string.Format("Auto-Started Session! ({0})", e.Details);
                 if (_config.EnableToast)
                 {
-                    _toast.ShowToast("STREAM/RECORDING DETECTED", detailMsg, _config.EnableSound);
+                    _toast.ShowToast("● RECORDING DETECTED", detailMsg, _config.EnableSound);
                 }
 
                 if (!Visible)
@@ -498,20 +548,19 @@ namespace StreamClipMarker
 
             if (_state == SessionState.Active && _currentSession != null)
             {
+                SetState(SessionState.Finalizing);
                 int markerCount = _currentSession.Markers.Count;
-                EndSession(true); // true = automated, non-blocking
+                EndSession(true);
 
                 string detailMsg = string.Format("Recording finished ({0}). Saved {1} clip(s)!", e.Details, markerCount);
                 if (_config.EnableToast)
                 {
-                    _toast.ShowToast("RECORDING STOPPED", detailMsg, _config.EnableSound);
+                    _toast.ShowToast("✓ SESSION SAVED", detailMsg, _config.EnableSound);
                 }
 
                 if (!Visible)
                 {
-                    _trayIcon.ShowBalloonTip(3000, "StreamClipMarker",
-                        detailMsg,
-                        ToolTipIcon.Info);
+                    _trayIcon.ShowBalloonTip(3000, "StreamClipMarker", detailMsg, ToolTipIcon.Info);
                 }
             }
         }
@@ -523,23 +572,36 @@ namespace StreamClipMarker
                 SessionData recovered = SessionStorage.LoadCurrentSession();
                 if (recovered != null && recovered.Markers.Count > 0)
                 {
-                    string msg = string.Format(
-                        "An unfinalized session from {0:yyyy-MM-dd HH:mm:ss} with {1} marker(s) was found!\n\n" +
-                        "This may happen if the computer restarted or closed unexpectedly.\n\n" +
-                        "Would you like to recover and finalize these clips now?",
-                        recovered.SessionStartLocal, recovered.Markers.Count);
-
-                    DialogResult dr = MessageBox.Show(this, msg, "Recover Unfinished Session?",
-                        MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-                    if (dr == DialogResult.Yes)
+                    using (SessionRecoveryForm recoveryForm = new SessionRecoveryForm(recovered))
                     {
-                        _currentSession = recovered;
-                        FinalizeCurrentSession(false);
-                    }
-                    else
-                    {
-                        SessionStorage.DeleteCurrentSession();
+                        recoveryForm.ShowDialog(this);
+                        if (recoveryForm.UserAction == RecoveryAction.Resume)
+                        {
+                            // Resume previous session!
+                            _currentSession = recovered;
+                            _currentSession.IsActive = true;
+                            _timer.Reset();
+                            _timer.StartWithOffset(recovered.DurationSeconds);
+
+                            RefreshMarkersList();
+                            _lblClipsCount.Text = string.Format("CLIPS MARKED: {0}", _currentSession.Markers.Count);
+                            SetState(SessionState.Active);
+                            ClockTimer_Tick(this, EventArgs.Empty);
+
+                            if (_config.EnableToast)
+                            {
+                                _toast.ShowToast("SESSION RESUMED", string.Format("Resumed with {0} saved clips.", recovered.Markers.Count), false);
+                            }
+                        }
+                        else if (recoveryForm.UserAction == RecoveryAction.Finalize)
+                        {
+                            _currentSession = recovered;
+                            FinalizeCurrentSession(false);
+                        }
+                        else if (recoveryForm.UserAction == RecoveryAction.Delete)
+                        {
+                            SessionStorage.DeleteCurrentSession();
+                        }
                     }
                 }
                 else
@@ -553,7 +615,7 @@ namespace StreamClipMarker
         {
             _hotkeyManager.Register(_config.HotkeyKey, _config.HotkeyCtrl, _config.HotkeyAlt, _config.HotkeyShift);
             _btnMarkClip.Text = string.Format("MARK CLIP — {0}", _config.GetHotkeyDisplayString());
-            _trayIcon.Text = string.Format("StreamClipMarker ({0} to Mark Clip)", _config.GetHotkeyDisplayString());
+            UpdateTrayTooltip();
         }
 
         private void UpdateOffsetDisplay()
@@ -591,9 +653,23 @@ namespace StreamClipMarker
                     _btnSessionAction.Visible = true;
                     _btnMarkClip.Enabled = true;
                     _lblClock.Text = "00:00:00";
+                    _lblRecordingFile.Text = "";
                     _clockTimer.Stop();
                     _countdownTimer.Stop();
                     if (_trayMenuAction != null) _trayMenuAction.Text = "⏱️ Start Session";
+                    break;
+
+                case SessionState.WaitingForRecording:
+                    _lblStatus.Text = "○ WAITING FOR RECORDING";
+                    _lblStatus.ForeColor = Color.FromArgb(240, 190, 60);
+                    _btnSessionAction.Text = "START SESSION MANUALLY";
+                    _btnSessionAction.BackColor = Color.FromArgb(45, 95, 160);
+                    _btnSessionAction.Visible = true;
+                    _btnMarkClip.Enabled = true;
+                    _lblClock.Text = "00:00:00";
+                    _clockTimer.Stop();
+                    _countdownTimer.Stop();
+                    if (_trayMenuAction != null) _trayMenuAction.Text = "⏱️ Start Session Manually";
                     break;
 
                 case SessionState.Countdown:
@@ -606,12 +682,20 @@ namespace StreamClipMarker
                     break;
 
                 case SessionState.Active:
-                    _lblStatus.Text = "● SESSION ACTIVE";
+                    _lblStatus.Text = "● RECORDING DETECTED";
                     _lblStatus.ForeColor = Color.FromArgb(0, 220, 130);
                     _btnSessionAction.Text = "END SESSION";
                     _btnSessionAction.BackColor = Color.FromArgb(200, 40, 40);
                     _clockTimer.Start();
                     if (_trayMenuAction != null) _trayMenuAction.Text = "🛑 End Session";
+                    break;
+
+                case SessionState.Finalizing:
+                    _lblStatus.Text = "◐ FINALIZING SESSION";
+                    _lblStatus.ForeColor = Color.FromArgb(255, 140, 40);
+                    _btnSessionAction.Text = "SAVING...";
+                    _btnSessionAction.BackColor = Color.FromArgb(80, 80, 90);
+                    _clockTimer.Stop();
                     break;
 
                 case SessionState.Ended:
@@ -623,6 +707,7 @@ namespace StreamClipMarker
                     if (_trayMenuAction != null) _trayMenuAction.Text = "⏱️ Start New Session";
                     break;
             }
+            UpdateTrayTooltip();
         }
 
         private void BtnSessionAction_Click(object sender, EventArgs e)
@@ -630,12 +715,13 @@ namespace StreamClipMarker
             switch (_state)
             {
                 case SessionState.Idle:
+                case SessionState.WaitingForRecording:
                     StartSessionSequence();
                     break;
 
                 case SessionState.Countdown:
                     _countdownTimer.Stop();
-                    SetState(SessionState.Idle);
+                    SetState(_config.AutoDetectRecording ? SessionState.WaitingForRecording : SessionState.Idle);
                     break;
 
                 case SessionState.Active:
@@ -693,6 +779,7 @@ namespace StreamClipMarker
             _lstMarkers.Items.Clear();
             _lblClipsCount.Text = "CLIPS MARKED: 0";
             _lastMarkerRawSeconds = -999;
+            _lastMarkerFormatted = "--:--:--";
 
             // Immediately persist session so it's crash-proof from the very first moment
             SessionStorage.SaveCurrentSession(_currentSession);
@@ -713,20 +800,19 @@ namespace StreamClipMarker
             }
         }
 
-        private void HotkeyManager_HotkeyPressed(object sender, EventArgs e)
+        private void HotkeyManager_HotkeyPressed(bool requestLabel)
         {
-            // Invoke on UI thread safely
             if (InvokeRequired)
             {
-                Invoke(new Action(() => TriggerClipMark(false)));
+                Invoke(new Action(() => TriggerClipMark(false, requestLabel)));
             }
             else
             {
-                TriggerClipMark(false);
+                TriggerClipMark(false, requestLabel);
             }
         }
 
-        private void TriggerClipMark(bool clickedFromUI)
+        private void TriggerClipMark(bool clickedFromUI, bool requestLabel)
         {
             if (_state != SessionState.Active || _currentSession == null)
             {
@@ -738,9 +824,9 @@ namespace StreamClipMarker
                 return;
             }
 
+            // CAPTURE TIMESTAMP INSTANTANEOUSLY (no delay, zero interruption!)
             double rawSec = _timer.ElapsedTotalSeconds;
 
-            // Rapid double-press check
             bool rapidPress = (_lastMarkerRawSeconds >= 0 && (rawSec - _lastMarkerRawSeconds) < 2.0);
             _lastMarkerRawSeconds = rawSec;
 
@@ -752,12 +838,13 @@ namespace StreamClipMarker
             // Save immediately for crash safety
             SessionStorage.SaveCurrentSession(_currentSession);
 
-            // Update UI list
+            // Update UI list & tray
+            string timeStr = marker.GetTimestamp(_currentSession.RecordingOffsetSeconds);
+            _lastMarkerFormatted = timeStr;
             AddMarkerToUI(marker);
             _lblClipsCount.Text = string.Format("CLIPS MARKED: {0}", _currentSession.Markers.Count);
+            UpdateTrayTooltip();
 
-            // Toast feedback
-            string timeStr = marker.GetTimestamp(_currentSession.RecordingOffsetSeconds);
             string rangeStr = string.Format("Clip: {0} → {1}",
                 marker.GetClipStart(_currentSession.RecordingOffsetSeconds, _currentSession.PaddingBeforeSeconds),
                 marker.GetClipEnd(_currentSession.RecordingOffsetSeconds, _currentSession.PaddingAfterSeconds));
@@ -767,6 +854,7 @@ namespace StreamClipMarker
                 rangeStr += " (rapid press recorded)";
             }
 
+            // Non-blocking toast feedback
             if (_config.EnableToast)
             {
                 _toast.ShowToast(string.Format("CLIP MARKED — {0}", timeStr), rangeStr, _config.EnableSound);
@@ -774,6 +862,23 @@ namespace StreamClipMarker
             else if (_config.EnableSound)
             {
                 try { System.Media.SystemSounds.Asterisk.Play(); } catch { }
+            }
+
+            // If Ctrl+F8 was pressed, allow entering an optional label without blocking the timestamp
+            if (requestLabel)
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    string input = ShowInputDialog(
+                        string.Format("Enter label for Clip #{0} ({1}):", marker.Id, timeStr),
+                        "Clip Label", marker.Note);
+                    if (input != null)
+                    {
+                        marker.Note = input.Trim();
+                        SessionStorage.SaveCurrentSession(_currentSession);
+                        RefreshMarkersList();
+                    }
+                }));
             }
         }
 
@@ -826,6 +931,19 @@ namespace StreamClipMarker
             }
 
             SetState(SessionState.Ended);
+
+            // If auto-detect enabled, return to waiting for next recording
+            if (_config.AutoDetectRecording)
+            {
+                System.Threading.ThreadPool.QueueUserWorkItem(s =>
+                {
+                    System.Threading.Thread.Sleep(2000);
+                    if (InvokeRequired)
+                    {
+                        Invoke(new Action(() => { if (_state == SessionState.Ended) SetState(SessionState.WaitingForRecording); }));
+                    }
+                });
+            }
         }
 
         private void FinalizeCurrentSession(bool isAutomatic = false)
@@ -860,7 +978,7 @@ namespace StreamClipMarker
             else
             {
                 _trayIcon.ShowBalloonTip(3000, "Session Finalized",
-                    string.Format("Saved {0} clip markers to {1}", _currentSession.Markers.Count, Path.GetFileName(_lastExportedTxtPath)),
+                    string.Format("Saved {0} clip markers to TXT, JSON & CSV in Documents!", _currentSession.Markers.Count),
                     ToolTipIcon.Info);
             }
         }
@@ -898,20 +1016,28 @@ namespace StreamClipMarker
 
         private void BtnSettings_Click(object sender, EventArgs e)
         {
-            using (SettingsForm sf = new SettingsForm(_config))
+            using (SettingsForm sf = new SettingsForm(_config, _recordingDetector))
             {
                 if (sf.ShowDialog(this) == DialogResult.OK)
                 {
                     UpdateHotkeyBinding();
                     UpdateOffsetDisplay();
 
-                    // Reconfigure recording detector
                     if (_recordingDetector != null)
                     {
                         _recordingDetector.Stop();
                         _recordingDetector.Enabled = _config.AutoDetectRecording;
                         _recordingDetector.WatchedFolder = _config.WatchedRecordingFolder;
                         _recordingDetector.Start();
+                    }
+
+                    if (_state == SessionState.Idle && _config.AutoDetectRecording)
+                    {
+                        SetState(SessionState.WaitingForRecording);
+                    }
+                    else if (_state == SessionState.WaitingForRecording && !_config.AutoDetectRecording)
+                    {
+                        SetState(SessionState.Idle);
                     }
                 }
             }
@@ -925,7 +1051,7 @@ namespace StreamClipMarker
             if (m == null) return;
 
             string currentNote = m.Note;
-            string input = ShowInputDialog("Edit Marker Note:", "Edit Marker", currentNote);
+            string input = ShowInputDialog("Edit Marker Note / Label:", "Edit Marker", currentNote);
             if (input != null)
             {
                 m.Note = input.Trim();
@@ -988,8 +1114,8 @@ namespace StreamClipMarker
         {
             Form prompt = new Form()
             {
-                Width = 360,
-                Height = 160,
+                Width = 380,
+                Height = 165,
                 FormBorderStyle = FormBorderStyle.FixedDialog,
                 Text = caption,
                 StartPosition = FormStartPosition.CenterParent,
@@ -1001,9 +1127,9 @@ namespace StreamClipMarker
             try { prompt.Icon = Icon; } catch { }
 
             Label textLabel = new Label() { Left = 20, Top = 16, Text = text, AutoSize = true, ForeColor = Color.LightGray };
-            TextBox textBox = new TextBox() { Left = 20, Top = 42, Width = 300, Text = defaultVal, BackColor = Color.FromArgb(40, 42, 50), ForeColor = Color.White };
-            Button confirmation = new Button() { Text = "OK", Left = 150, Width = 80, Top = 80, DialogResult = DialogResult.OK, BackColor = Color.FromArgb(0, 140, 90), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
-            Button cancel = new Button() { Text = "Cancel", Left = 240, Width = 80, Top = 80, DialogResult = DialogResult.Cancel, BackColor = Color.FromArgb(50, 52, 60), ForeColor = Color.LightGray, FlatStyle = FlatStyle.Flat };
+            TextBox textBox = new TextBox() { Left = 20, Top = 42, Width = 320, Text = defaultVal, BackColor = Color.FromArgb(40, 42, 50), ForeColor = Color.White };
+            Button confirmation = new Button() { Text = "Save", Left = 170, Width = 80, Top = 80, DialogResult = DialogResult.OK, BackColor = Color.FromArgb(0, 140, 90), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            Button cancel = new Button() { Text = "Cancel", Left = 260, Width = 80, Top = 80, DialogResult = DialogResult.Cancel, BackColor = Color.FromArgb(50, 52, 60), ForeColor = Color.LightGray, FlatStyle = FlatStyle.Flat };
 
             prompt.Controls.Add(textLabel);
             prompt.Controls.Add(textBox);

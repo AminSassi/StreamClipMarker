@@ -42,12 +42,15 @@
     <Compile Include="src\Program.cs" />
     <Compile Include="src\MainForm.cs" />
     <Compile Include="src\SettingsForm.cs" />
+    <Compile Include="src\DetectionTestForm.cs" />
+    <Compile Include="src\SessionRecoveryForm.cs" />
     <Compile Include="src\Core\AppConfig.cs" />
     <Compile Include="src\Core\AppBranding.cs" />
     <Compile Include="src\Core\ClipMarker.cs" />
     <Compile Include="src\Core\HotkeyManager.cs" />
     <Compile Include="src\Core\JsonHelper.cs" />
     <Compile Include="src\Core\RecordingDetector.cs" />
+    <Compile Include="src\Core\RecordingStateMachine.cs" />
     <Compile Include="src\Core\SessionData.cs" />
     <Compile Include="src\Core\SessionStorage.cs" />
     <Compile Include="src\Core\SessionTimer.cs" />

@@ -11,7 +11,7 @@ if not exist "%CSC%" (
 )
 
 echo [StreamClipMarker] Compiling standalone Windows executable with custom icon...
-"%CSC%" /target:winexe /optimize+ /platform:anycpu /win32icon:app_icon.ico /out:StreamClipMarker.exe /r:System.dll,System.Core.dll,System.Drawing.dll,System.Windows.Forms.dll src\Program.cs src\MainForm.cs src\SettingsForm.cs src\Core\AppConfig.cs src\Core\AppBranding.cs src\Core\ClipMarker.cs src\Core\HotkeyManager.cs src\Core\JsonHelper.cs src\Core\RecordingDetector.cs src\Core\SessionData.cs src\Core\SessionStorage.cs src\Core\SessionTimer.cs src\Core\ToastFeedback.cs src\Properties\AssemblyInfo.cs
+"%CSC%" /target:winexe /optimize+ /platform:anycpu /win32icon:app_icon.ico /out:StreamClipMarker.exe /r:System.dll,System.Core.dll,System.Drawing.dll,System.Windows.Forms.dll src\Program.cs src\MainForm.cs src\SettingsForm.cs src\DetectionTestForm.cs src\SessionRecoveryForm.cs src\Core\AppConfig.cs src\Core\AppBranding.cs src\Core\ClipMarker.cs src\Core\HotkeyManager.cs src\Core\JsonHelper.cs src\Core\RecordingDetector.cs src\Core\RecordingStateMachine.cs src\Core\SessionData.cs src\Core\SessionStorage.cs src\Core\SessionTimer.cs src\Core\ToastFeedback.cs src\Properties\AssemblyInfo.cs
 
 if %ERRORLEVEL% equ 0 (
     echo [SUCCESS] StreamClipMarker.exe built successfully with custom branding!

@@ -7,7 +7,8 @@ namespace StreamClipMarker.Core
     public class HotkeyManager : NativeWindow, IDisposable
     {
         private const int WM_HOTKEY = 0x0312;
-        private const int HOTKEY_ID = 9000;
+        private const int HOTKEY_PRIMARY_ID = 9000;
+        private const int HOTKEY_LABEL_ID = 9001;
 
         private const uint MOD_NONE = 0x0000;
         private const uint MOD_ALT = 0x0001;
@@ -22,6 +23,8 @@ namespace StreamClipMarker.Core
         private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
         public event EventHandler HotkeyPressed;
+        public event EventHandler MarkWithLabelPressed;
+
         private bool _isRegistered = false;
 
         public HotkeyManager()
@@ -50,13 +53,25 @@ namespace StreamClipMarker.Core
             if (shift) modifiers |= MOD_SHIFT;
             modifiers |= MOD_NOREPEAT;
 
-            bool success = RegisterHotKey(Handle, HOTKEY_ID, modifiers, (uint)key);
+            bool success = RegisterHotKey(Handle, HOTKEY_PRIMARY_ID, modifiers, (uint)key);
             if (!success)
             {
-                // Try without MOD_NOREPEAT in case of legacy compatibility
                 modifiers &= ~MOD_NOREPEAT;
-                success = RegisterHotKey(Handle, HOTKEY_ID, modifiers, (uint)key);
+                success = RegisterHotKey(Handle, HOTKEY_PRIMARY_ID, modifiers, (uint)key);
             }
+
+            // Register secondary shortcut (e.g. Ctrl + Key if Ctrl not used, or Shift + Key)
+            uint labelModifiers = modifiers;
+            if (!ctrl)
+            {
+                labelModifiers |= MOD_CONTROL;
+            }
+            else
+            {
+                labelModifiers |= MOD_SHIFT;
+            }
+
+            RegisterHotKey(Handle, HOTKEY_LABEL_ID, labelModifiers, (uint)key);
 
             _isRegistered = success;
             return success;
@@ -68,7 +83,8 @@ namespace StreamClipMarker.Core
             {
                 try
                 {
-                    UnregisterHotKey(Handle, HOTKEY_ID);
+                    UnregisterHotKey(Handle, HOTKEY_PRIMARY_ID);
+                    UnregisterHotKey(Handle, HOTKEY_LABEL_ID);
                 }
                 catch { }
                 _isRegistered = false;
@@ -77,9 +93,17 @@ namespace StreamClipMarker.Core
 
         protected override void WndProc(ref Message m)
         {
-            if (m.Msg == WM_HOTKEY && m.WParam.ToInt32() == HOTKEY_ID)
+            if (m.Msg == WM_HOTKEY)
             {
-                OnHotkeyPressed();
+                int id = m.WParam.ToInt32();
+                if (id == HOTKEY_PRIMARY_ID)
+                {
+                    OnHotkeyPressed();
+                }
+                else if (id == HOTKEY_LABEL_ID)
+                {
+                    OnMarkWithLabelPressed();
+                }
             }
             base.WndProc(ref m);
         }
@@ -87,6 +111,15 @@ namespace StreamClipMarker.Core
         protected virtual void OnHotkeyPressed()
         {
             EventHandler handler = HotkeyPressed;
+            if (handler != null)
+            {
+                handler(this, EventArgs.Empty);
+            }
+        }
+
+        protected virtual void OnMarkWithLabelPressed()
+        {
+            EventHandler handler = MarkWithLabelPressed;
             if (handler != null)
             {
                 handler(this, EventArgs.Empty);

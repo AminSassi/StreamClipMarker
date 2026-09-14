@@ -93,13 +93,7 @@ namespace StreamClipMarker.Core
             }
             catch
             {
-                // Fallback attempt to write directly
-                try
-                {
-                    string targetPath = GetCurrentSessionPath();
-                    // Avoid unhandled crash during file write
-                }
-                catch { }
+                // Fallback attempt
             }
         }
 
@@ -170,8 +164,10 @@ namespace StreamClipMarker.Core
             string baseName = string.Format("TikTok_Stream_{0:yyyy-MM-dd_HH-mm-ss}", session.SessionStartLocal);
             string txtPath = Path.Combine(outputFolder, baseName + ".txt");
             string jsonPath = Path.Combine(outputFolder, baseName + ".json");
+            string csvPath = Path.Combine(outputFolder, baseName + ".csv");
+            string clipsCsvPath = Path.Combine(outputFolder, "clips.csv");
 
-            // Build human-readable TXT
+            // 1. Build human-readable TXT
             StringBuilder txt = new StringBuilder();
             txt.AppendLine("TikTok LIVE STREAM CLIP MARKERS");
             txt.AppendLine("================================");
@@ -217,7 +213,7 @@ namespace StreamClipMarker.Core
 
             File.WriteAllText(txtPath, txt.ToString(), Encoding.UTF8);
 
-            // Build machine-readable JSON (future FFmpeg-friendly)
+            // 2. Build machine-readable JSON
             StringBuilder json = new StringBuilder();
             json.AppendLine("{");
             json.AppendLine(string.Format("  \"session_start\": \"{0:yyyy-MM-ddTHH:mm:ss}\",", session.SessionStartLocal));
@@ -262,13 +258,42 @@ namespace StreamClipMarker.Core
 
             File.WriteAllText(jsonPath, json.ToString(), Encoding.UTF8);
 
+            // 3. Build CSV export (clips.csv and session-specific CSV)
+            StringBuilder csv = new StringBuilder();
+            csv.AppendLine("Clip,Marker,Start,End,Note");
+
+            for (int i = 0; i < session.Markers.Count; i++)
+            {
+                ClipMarker m = session.Markers[i];
+                string markerTime = m.GetTimestamp(session.RecordingOffsetSeconds);
+                string clipStart = m.GetClipStart(session.RecordingOffsetSeconds, session.PaddingBeforeSeconds);
+                string clipEnd = m.GetClipEnd(session.RecordingOffsetSeconds, session.PaddingAfterSeconds);
+                string note = EscapeCsv(m.Note);
+
+                csv.AppendLine(string.Format("{0},{1},{2},{3},{4}", i + 1, markerTime, clipStart, clipEnd, note));
+            }
+
+            File.WriteAllText(csvPath, csv.ToString(), Encoding.UTF8);
+            File.WriteAllText(clipsCsvPath, csv.ToString(), Encoding.UTF8);
+
             // Clean up session file
             DeleteCurrentSession();
 
             SessionExportResult result = new SessionExportResult();
             result.TxtFilePath = txtPath;
             result.JsonFilePath = jsonPath;
+            result.CsvFilePath = csvPath;
             return result;
+        }
+
+        private static string EscapeCsv(string val)
+        {
+            if (string.IsNullOrEmpty(val)) return "";
+            if (val.Contains(",") || val.Contains("\"") || val.Contains("\n") || val.Contains("\r"))
+            {
+                return "\"" + val.Replace("\"", "\"\"") + "\"";
+            }
+            return val;
         }
     }
 }

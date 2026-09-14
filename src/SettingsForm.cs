@@ -8,6 +8,7 @@ namespace StreamClipMarker.Core
     public class SettingsForm : Form
     {
         private readonly AppConfig _config;
+        private readonly RecordingDetector _detector;
 
         private ComboBox _comboHotkey;
         private CheckBox _chkCtrl;
@@ -30,14 +31,16 @@ namespace StreamClipMarker.Core
         private CheckBox _chkAutoEnd;
         private TextBox _txtWatchedFolder;
         private Button _btnBrowseWatched;
+        private Button _btnTestDetection;
         private CheckBox _chkMinimizeToTray;
 
         private Button _btnSave;
         private Button _btnCancel;
 
-        public SettingsForm(AppConfig config)
+        public SettingsForm(AppConfig config, RecordingDetector detector = null)
         {
             _config = config;
+            _detector = detector;
             InitializeUI();
             LoadConfigValues();
         }
@@ -45,7 +48,7 @@ namespace StreamClipMarker.Core
         private void InitializeUI()
         {
             Text = "StreamClipMarker Settings";
-            Size = new Size(480, 665);
+            Size = new Size(480, 700);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
@@ -161,6 +164,29 @@ namespace StreamClipMarker.Core
                 }
             };
             Controls.Add(_btnBrowseWatched);
+            y += 30;
+
+            // Test Recording Detection Button
+            _btnTestDetection = new Button
+            {
+                Text = "🔍 Test Recording Detection Diagnostics...",
+                Location = new Point(25, y),
+                Size = new Size(270, 26),
+                BackColor = Color.FromArgb(36, 44, 56),
+                ForeColor = Color.FromArgb(0, 210, 140),
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold)
+            };
+            _btnTestDetection.FlatAppearance.BorderColor = Color.FromArgb(0, 160, 100);
+            _btnTestDetection.Click += (s, e) =>
+            {
+                if (_detector != null)
+                {
+                    DetectionTestForm testForm = new DetectionTestForm(_detector);
+                    testForm.Show(this);
+                }
+            };
+            Controls.Add(_btnTestDetection);
             y += 36;
 
             // Section: Clip Padding

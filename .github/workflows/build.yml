@@ -30,6 +30,9 @@ jobs:
       run: |
         python tests/test_clip_logic.py
         python tests/test_auto_detector.py
+        python tests/test_state_machine.py
+        python tests/test_csv_export.py
+        python tests/test_session_recovery.py
 
     - name: Build Standalone Executable
       run: |

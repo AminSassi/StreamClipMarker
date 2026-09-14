@@ -31,5 +31,6 @@ namespace StreamClipMarker.Core
     {
         public string TxtFilePath { get; set; }
         public string JsonFilePath { get; set; }
+        public string CsvFilePath { get; set; }
     }
 }
