@@ -4,6 +4,13 @@ An ultra-lightweight Windows desktop utility for livestream clip timestamp marki
 
 ![Logo](resources/logo.png)
 
+[![GitHub Release](https://img.shields.io/github/v/release/AminSassi/StreamClipMarker?color=00e68a&label=Release)](https://github.com/AminSassi/StreamClipMarker/releases/latest)
+[![Download Binary](https://img.shields.io/badge/Download-StreamClipMarker.exe-00b4d8?logo=windows)](https://github.com/AminSassi/StreamClipMarker/releases/download/v1.1.0/StreamClipMarker.exe)
+[![Build Status](https://github.com/AminSassi/StreamClipMarker/actions/workflows/build.yml/badge.svg)](https://github.com/AminSassi/StreamClipMarker/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+> 🚀 **[Click here to download StreamClipMarker.exe](https://github.com/AminSassi/StreamClipMarker/releases/download/v1.1.0/StreamClipMarker.exe)** — Standalone Windows binary (84 KB), no installation or runtimes required!
+
 ---
 
 ## The Problem & The Solution
