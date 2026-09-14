@@ -1,10 +1,15 @@
-name: Build and Test
+name: Build and Release
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
+    tags:
+      - 'v*'
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -30,8 +35,26 @@ jobs:
       run: |
         cmd.exe /c build.bat
 
-    - name: Upload Artifact
+    - name: Upload CI Artifact
       uses: actions/upload-artifact@v4
       with:
         name: StreamClipMarker-Binary
         path: StreamClipMarker.exe
+
+    - name: Publish GitHub Release Asset
+      if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'latest' }}
+        name: ${{ startsWith(github.ref, 'refs/tags/') && format('StreamClipMarker {0}', github.ref_name) || 'StreamClipMarker Latest' }}
+        body: |
+          ### StreamClipMarker Standalone Executable
+          - Ultra-lightweight Windows desktop utility for livestream clip timestamp marking.
+          - Single standalone executable with embedded multi-resolution branding.
+          - **Download `StreamClipMarker.exe` below to run immediately.**
+        draft: false
+        prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        files: |
+          StreamClipMarker.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
