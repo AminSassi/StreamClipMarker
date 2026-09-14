@@ -22,8 +22,9 @@ namespace StreamClipMarker.Core
         public bool EnableSound { get; set; }
         public bool EnableToast { get; set; }
 
-        // New features
+        // Auto-detection features
         public bool AutoDetectRecording { get; set; }
+        public bool AutoEndRecording { get; set; }
         public string WatchedRecordingFolder { get; set; }
         public bool MinimizeToTrayOnClose { get; set; }
 
@@ -49,6 +50,7 @@ namespace StreamClipMarker.Core
             EnableToast = true;
 
             AutoDetectRecording = true;
+            AutoEndRecording = true;
             WatchedRecordingFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
             MinimizeToTrayOnClose = true;
         }
@@ -109,6 +111,7 @@ namespace StreamClipMarker.Core
                 cfg.EnableToast = JsonHelper.ExtractBool(json, "EnableToast", true);
 
                 cfg.AutoDetectRecording = JsonHelper.ExtractBool(json, "AutoDetectRecording", true);
+                cfg.AutoEndRecording = JsonHelper.ExtractBool(json, "AutoEndRecording", true);
                 string defaultVideos = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
                 cfg.WatchedRecordingFolder = JsonHelper.ExtractString(json, "WatchedRecordingFolder", defaultVideos);
                 cfg.MinimizeToTrayOnClose = JsonHelper.ExtractBool(json, "MinimizeToTrayOnClose", true);
@@ -141,6 +144,7 @@ namespace StreamClipMarker.Core
                 sb.AppendLine(string.Format("  \"EnableSound\": {0},", EnableSound ? "true" : "false"));
                 sb.AppendLine(string.Format("  \"EnableToast\": {0},", EnableToast ? "true" : "false"));
                 sb.AppendLine(string.Format("  \"AutoDetectRecording\": {0},", AutoDetectRecording ? "true" : "false"));
+                sb.AppendLine(string.Format("  \"AutoEndRecording\": {0},", AutoEndRecording ? "true" : "false"));
                 sb.AppendLine(string.Format("  \"WatchedRecordingFolder\": \"{0}\",", JsonHelper.Escape(WatchedRecordingFolder)));
                 sb.AppendLine(string.Format("  \"MinimizeToTrayOnClose\": {0}", MinimizeToTrayOnClose ? "true" : "false"));
                 sb.AppendLine("}");

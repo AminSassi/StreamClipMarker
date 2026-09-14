@@ -433,9 +433,10 @@ namespace StreamClipMarker
             _countdownTimer.Interval = 1000;
             _countdownTimer.Tick += CountdownTimer_Tick;
 
-            // Auto-detection engine
+            // Auto-detection engine (Start and Stop)
             _recordingDetector = new RecordingDetector(_config.AutoDetectRecording, _config.WatchedRecordingFolder);
             _recordingDetector.RecordingStarted += RecordingDetector_RecordingStarted;
+            _recordingDetector.RecordingStopped += RecordingDetector_RecordingStopped;
             _recordingDetector.Start();
 
             UpdateHotkeyBinding();
@@ -450,15 +451,27 @@ namespace StreamClipMarker
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() => OnAutoRecordingDetected(e)));
+                Invoke(new Action(() => OnAutoRecordingStarted(e)));
             }
             else
             {
-                OnAutoRecordingDetected(e);
+                OnAutoRecordingStarted(e);
             }
         }
 
-        private void OnAutoRecordingDetected(RecordingEventArgs e)
+        private void RecordingDetector_RecordingStopped(object sender, RecordingEventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => OnAutoRecordingStopped(e)));
+            }
+            else
+            {
+                OnAutoRecordingStopped(e);
+            }
+        }
+
+        private void OnAutoRecordingStarted(RecordingEventArgs e)
         {
             if (_state == SessionState.Idle || _state == SessionState.Ended)
             {
@@ -474,6 +487,30 @@ namespace StreamClipMarker
                 {
                     _trayIcon.ShowBalloonTip(2000, "StreamClipMarker",
                         "Recording detected! Session auto-started. Press " + _config.GetHotkeyDisplayString() + " anytime to mark clips.",
+                        ToolTipIcon.Info);
+                }
+            }
+        }
+
+        private void OnAutoRecordingStopped(RecordingEventArgs e)
+        {
+            if (!_config.AutoEndRecording) return;
+
+            if (_state == SessionState.Active && _currentSession != null)
+            {
+                int markerCount = _currentSession.Markers.Count;
+                EndSession(true); // true = automated, non-blocking
+
+                string detailMsg = string.Format("Recording finished ({0}). Saved {1} clip(s)!", e.Details, markerCount);
+                if (_config.EnableToast)
+                {
+                    _toast.ShowToast("RECORDING STOPPED", detailMsg, _config.EnableSound);
+                }
+
+                if (!Visible)
+                {
+                    _trayIcon.ShowBalloonTip(3000, "StreamClipMarker",
+                        detailMsg,
                         ToolTipIcon.Info);
                 }
             }
@@ -498,7 +535,7 @@ namespace StreamClipMarker
                     if (dr == DialogResult.Yes)
                     {
                         _currentSession = recovered;
-                        FinalizeCurrentSession();
+                        FinalizeCurrentSession(false);
                     }
                     else
                     {
@@ -602,7 +639,7 @@ namespace StreamClipMarker
                     break;
 
                 case SessionState.Active:
-                    EndSession();
+                    EndSession(false);
                     break;
 
                 case SessionState.Ended:
@@ -771,22 +808,27 @@ namespace StreamClipMarker
             _lblClipsCount.Text = string.Format("CLIPS MARKED: {0}", _currentSession.Markers.Count);
         }
 
-        private void EndSession()
+        private void EndSession(bool isAutomatic = false)
         {
             _timer.Stop();
             _clockTimer.Stop();
+
+            if (_recordingDetector != null)
+            {
+                _recordingDetector.NotifySessionEndedManually();
+            }
 
             if (_currentSession != null)
             {
                 _currentSession.DurationSeconds = _timer.ElapsedTotalSeconds;
                 _currentSession.IsActive = false;
-                FinalizeCurrentSession();
+                FinalizeCurrentSession(isAutomatic);
             }
 
             SetState(SessionState.Ended);
         }
 
-        private void FinalizeCurrentSession()
+        private void FinalizeCurrentSession(bool isAutomatic = false)
         {
             if (_currentSession == null) return;
 
@@ -806,7 +848,7 @@ namespace StreamClipMarker
                 }
             }
 
-            if (Visible)
+            if (!isAutomatic && Visible)
             {
                 MessageBox.Show(this,
                     string.Format("Livestream session saved successfully!\n\nMarkers: {0}\nDuration: {1}\n\nFiles created in:\n{2}",
@@ -841,7 +883,7 @@ namespace StreamClipMarker
 
                 if (dr == DialogResult.Yes)
                 {
-                    EndSession();
+                    EndSession(false);
                 }
             }
 

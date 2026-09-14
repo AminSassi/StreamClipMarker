@@ -25,8 +25,9 @@ namespace StreamClipMarker.Core
         private CheckBox _chkSound;
         private CheckBox _chkToast;
 
-        // New controls
+        // Auto-detection controls
         private CheckBox _chkAutoDetect;
+        private CheckBox _chkAutoEnd;
         private TextBox _txtWatchedFolder;
         private Button _btnBrowseWatched;
         private CheckBox _chkMinimizeToTray;
@@ -44,7 +45,7 @@ namespace StreamClipMarker.Core
         private void InitializeUI()
         {
             Text = "StreamClipMarker Settings";
-            Size = new Size(480, 640);
+            Size = new Size(480, 665);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
@@ -103,6 +104,17 @@ namespace StreamClipMarker.Core
                 Font = new Font("Segoe UI", 9.25f, FontStyle.Bold)
             };
             Controls.Add(_chkAutoDetect);
+            y += 24;
+
+            _chkAutoEnd = new CheckBox
+            {
+                Text = "Automatically end and save session when recording stops",
+                Location = new Point(25, y),
+                AutoSize = true,
+                ForeColor = Color.LightGray,
+                Font = new Font("Segoe UI", 9.25f, FontStyle.Bold)
+            };
+            Controls.Add(_chkAutoEnd);
             y += 24;
 
             Label lblWatchHint = new Label
@@ -357,6 +369,7 @@ namespace StreamClipMarker.Core
             _chkShift.Checked = _config.HotkeyShift;
 
             _chkAutoDetect.Checked = _config.AutoDetectRecording;
+            _chkAutoEnd.Checked = _config.AutoEndRecording;
             _txtWatchedFolder.Text = _config.WatchedRecordingFolder;
             _chkMinimizeToTray.Checked = _config.MinimizeToTrayOnClose;
 
@@ -379,6 +392,7 @@ namespace StreamClipMarker.Core
             _config.HotkeyShift = _chkShift.Checked;
 
             _config.AutoDetectRecording = _chkAutoDetect.Checked;
+            _config.AutoEndRecording = _chkAutoEnd.Checked;
             _config.WatchedRecordingFolder = _txtWatchedFolder.Text.Trim();
             _config.MinimizeToTrayOnClose = _chkMinimizeToTray.Checked;
 
