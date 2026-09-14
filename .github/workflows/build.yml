@@ -1,0 +1,37 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Run Unit Tests
+      run: |
+        python tests/test_clip_logic.py
+        python tests/test_auto_detector.py
+
+    - name: Build Standalone Executable
+      run: |
+        cmd.exe /c build.bat
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: StreamClipMarker-Binary
+        path: StreamClipMarker.exe

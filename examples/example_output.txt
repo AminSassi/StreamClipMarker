@@ -1,0 +1,35 @@
+TikTok LIVE STREAM CLIP MARKERS
+================================
+
+Session start:
+2026-09-14 19:32:14
+
+Session duration:
+01:43:27
+
+Recording offset:
++0s
+
+Clip padding:
+Before: 10s | After: 20s
+
+Total markers:
+4
+
+Markers:
+
+01. 00:12:43 - "Funny chat donation reaction"
+    Clip start: 00:12:33
+    Clip end:   00:13:03
+
+02. 00:27:18 - "1v4 clutch play"
+    Clip start: 00:27:08
+    Clip end:   00:27:38
+
+03. 00:41:06 - "Game glitch"
+    Clip start: 00:40:56
+    Clip end:   00:41:26
+
+04. 01:03:52 - "Victory screen & dance"
+    Clip start: 01:03:42
+    Clip end:   01:04:12

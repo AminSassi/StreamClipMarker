@@ -1,0 +1,25 @@
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Temporary / Session files
+*.tmp
+current_session.json
+current_session.json.tmp
+config.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
