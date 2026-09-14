@@ -15,8 +15,6 @@ namespace StreamClipMarker.Core
         private CheckBox _chkAlt;
         private CheckBox _chkShift;
 
-        private NumericUpDown _numPaddingBefore;
-        private NumericUpDown _numPaddingAfter;
         private NumericUpDown _numOffset;
 
         private CheckBox _chkCountdown;
@@ -189,46 +187,6 @@ namespace StreamClipMarker.Core
             Controls.Add(_btnTestDetection);
             y += 36;
 
-            // Section: Clip Padding
-            Label lblPaddingSection = CreateHeaderLabel("DEFAULT CLIP PADDING", 20, y);
-            Controls.Add(lblPaddingSection);
-            y += 24;
-
-            Label lblPadBefore = new Label { Text = "Before marker:", Location = new Point(25, y + 3), AutoSize = true, ForeColor = Color.LightGray };
-            Controls.Add(lblPadBefore);
-
-            _numPaddingBefore = new NumericUpDown
-            {
-                Location = new Point(130, y),
-                Width = 70,
-                Minimum = 0,
-                Maximum = 600,
-                BackColor = Color.FromArgb(40, 42, 50),
-                ForeColor = Color.White
-            };
-            Controls.Add(_numPaddingBefore);
-
-            Label lblSecBefore = new Label { Text = "sec", Location = new Point(205, y + 3), AutoSize = true, ForeColor = Color.Gray };
-            Controls.Add(lblSecBefore);
-
-            Label lblPadAfter = new Label { Text = "After marker:", Location = new Point(245, y + 3), AutoSize = true, ForeColor = Color.LightGray };
-            Controls.Add(lblPadAfter);
-
-            _numPaddingAfter = new NumericUpDown
-            {
-                Location = new Point(340, y),
-                Width = 70,
-                Minimum = 0,
-                Maximum = 600,
-                BackColor = Color.FromArgb(40, 42, 50),
-                ForeColor = Color.White
-            };
-            Controls.Add(_numPaddingAfter);
-
-            Label lblSecAfter = new Label { Text = "sec", Location = new Point(415, y + 3), AutoSize = true, ForeColor = Color.Gray };
-            Controls.Add(lblSecAfter);
-            y += 36;
-
             // Section: Recording Offset
             Label lblOffsetSection = CreateHeaderLabel("RECORDING TIME OFFSET", 20, y);
             Controls.Add(lblOffsetSection);
@@ -399,8 +357,6 @@ namespace StreamClipMarker.Core
             _txtWatchedFolder.Text = _config.WatchedRecordingFolder;
             _chkMinimizeToTray.Checked = _config.MinimizeToTrayOnClose;
 
-            _numPaddingBefore.Value = Math.Max(0, Math.Min(600, _config.PaddingBeforeSeconds));
-            _numPaddingAfter.Value = Math.Max(0, Math.Min(600, _config.PaddingAfterSeconds));
             _numOffset.Value = Math.Max(-3600, Math.Min(3600, _config.RecordingOffsetSeconds));
 
             _chkCountdown.Checked = _config.EnableCountdown;
@@ -422,8 +378,6 @@ namespace StreamClipMarker.Core
             _config.WatchedRecordingFolder = _txtWatchedFolder.Text.Trim();
             _config.MinimizeToTrayOnClose = _chkMinimizeToTray.Checked;
 
-            _config.PaddingBeforeSeconds = (int)_numPaddingBefore.Value;
-            _config.PaddingAfterSeconds = (int)_numPaddingAfter.Value;
             _config.RecordingOffsetSeconds = (int)_numOffset.Value;
 
             _config.EnableCountdown = _chkCountdown.Checked;

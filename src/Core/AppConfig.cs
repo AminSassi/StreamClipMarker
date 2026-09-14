@@ -11,8 +11,6 @@ namespace StreamClipMarker.Core
         public bool HotkeyAlt { get; set; }
         public bool HotkeyShift { get; set; }
 
-        public int PaddingBeforeSeconds { get; set; }
-        public int PaddingAfterSeconds { get; set; }
         public int RecordingOffsetSeconds { get; set; }
 
         public bool EnableCountdown { get; set; }
@@ -36,8 +34,6 @@ namespace StreamClipMarker.Core
             HotkeyAlt = false;
             HotkeyShift = false;
 
-            PaddingBeforeSeconds = 10;
-            PaddingAfterSeconds = 20;
             RecordingOffsetSeconds = 0;
 
             EnableCountdown = true;
@@ -96,8 +92,6 @@ namespace StreamClipMarker.Core
                 cfg.HotkeyAlt = JsonHelper.ExtractBool(json, "HotkeyAlt", false);
                 cfg.HotkeyShift = JsonHelper.ExtractBool(json, "HotkeyShift", false);
 
-                cfg.PaddingBeforeSeconds = JsonHelper.ExtractInt(json, "PaddingBeforeSeconds", 10);
-                cfg.PaddingAfterSeconds = JsonHelper.ExtractInt(json, "PaddingAfterSeconds", 20);
                 cfg.RecordingOffsetSeconds = JsonHelper.ExtractInt(json, "RecordingOffsetSeconds", 0);
 
                 cfg.EnableCountdown = JsonHelper.ExtractBool(json, "EnableCountdown", true);
@@ -135,8 +129,6 @@ namespace StreamClipMarker.Core
                 sb.AppendLine(string.Format("  \"HotkeyCtrl\": {0},", HotkeyCtrl ? "true" : "false"));
                 sb.AppendLine(string.Format("  \"HotkeyAlt\": {0},", HotkeyAlt ? "true" : "false"));
                 sb.AppendLine(string.Format("  \"HotkeyShift\": {0},", HotkeyShift ? "true" : "false"));
-                sb.AppendLine(string.Format("  \"PaddingBeforeSeconds\": {0},", PaddingBeforeSeconds));
-                sb.AppendLine(string.Format("  \"PaddingAfterSeconds\": {0},", PaddingAfterSeconds));
                 sb.AppendLine(string.Format("  \"RecordingOffsetSeconds\": {0},", RecordingOffsetSeconds));
                 sb.AppendLine(string.Format("  \"EnableCountdown\": {0},", EnableCountdown ? "true" : "false"));
                 sb.AppendLine(string.Format("  \"CountdownSeconds\": {0},", CountdownSeconds));

@@ -9,8 +9,6 @@ namespace StreamClipMarker.Core
         public DateTime SessionStartUtc { get; set; }
         public double DurationSeconds { get; set; }
         public int RecordingOffsetSeconds { get; set; }
-        public int PaddingBeforeSeconds { get; set; }
-        public int PaddingAfterSeconds { get; set; }
         public bool IsActive { get; set; }
         public List<ClipMarker> Markers { get; set; }
 
@@ -20,8 +18,6 @@ namespace StreamClipMarker.Core
             SessionStartUtc = DateTime.UtcNow;
             DurationSeconds = 0;
             RecordingOffsetSeconds = 0;
-            PaddingBeforeSeconds = 10;
-            PaddingAfterSeconds = 20;
             IsActive = false;
             Markers = new List<ClipMarker>();
         }

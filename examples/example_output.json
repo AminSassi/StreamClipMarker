@@ -1,54 +1,26 @@
 {
   "session_start": "2026-09-14T19:32:14",
-  "duration": "01:43:27",
-  "duration_seconds": 6207.0,
-  "recording_offset_seconds": 0,
-  "padding_before_seconds": 10,
-  "padding_after_seconds": 20,
+  "duration": "02:13:42",
   "markers": [
     {
-      "id": 1,
       "timestamp": "00:12:43",
-      "seconds": 763.0,
-      "clip_start": "00:12:33",
-      "clip_start_seconds": 753.0,
-      "clip_end": "00:13:03",
-      "clip_end_seconds": 783.0,
-      "raw_elapsed_seconds": 763.125,
-      "note": "Funny chat donation reaction"
+      "seconds": 763
     },
     {
-      "id": 2,
       "timestamp": "00:27:18",
-      "seconds": 1638.0,
-      "clip_start": "00:27:08",
-      "clip_start_seconds": 1628.0,
-      "clip_end": "00:27:38",
-      "clip_end_seconds": 1658.0,
-      "raw_elapsed_seconds": 1638.452,
-      "note": "1v4 clutch play"
+      "seconds": 1638
     },
     {
-      "id": 3,
       "timestamp": "00:41:06",
-      "seconds": 2466.0,
-      "clip_start": "00:40:56",
-      "clip_start_seconds": 2456.0,
-      "clip_end": "00:41:26",
-      "clip_end_seconds": 2476.0,
-      "raw_elapsed_seconds": 2466.011,
-      "note": "Game glitch"
+      "seconds": 2466
     },
     {
-      "id": 4,
-      "timestamp": "01:03:52",
-      "seconds": 3832.0,
-      "clip_start": "01:03:42",
-      "clip_start_seconds": 3822.0,
-      "clip_end": "01:04:12",
-      "clip_end_seconds": 3842.0,
-      "raw_elapsed_seconds": 3832.894,
-      "note": "Victory screen & dance"
+      "timestamp": "01:04:51",
+      "seconds": 3891
+    },
+    {
+      "timestamp": "01:37:22",
+      "seconds": 5842
     }
   ]
 }

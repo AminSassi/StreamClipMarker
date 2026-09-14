@@ -54,8 +54,6 @@ namespace StreamClipMarker.Core
                 sb.AppendLine(string.Format("  \"session_start_utc\": \"{0:o}\",", session.SessionStartUtc));
                 sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  \"duration_seconds\": {0:F3},", session.DurationSeconds));
                 sb.AppendLine(string.Format("  \"recording_offset_seconds\": {0},", session.RecordingOffsetSeconds));
-                sb.AppendLine(string.Format("  \"padding_before_seconds\": {0},", session.PaddingBeforeSeconds));
-                sb.AppendLine(string.Format("  \"padding_after_seconds\": {0},", session.PaddingAfterSeconds));
                 sb.AppendLine(string.Format("  \"is_active\": {0},", session.IsActive ? "true" : "false"));
                 sb.AppendLine("  \"markers\": [");
 
@@ -117,8 +115,6 @@ namespace StreamClipMarker.Core
 
                 session.DurationSeconds = JsonHelper.ExtractDouble(json, "duration_seconds", 0);
                 session.RecordingOffsetSeconds = JsonHelper.ExtractInt(json, "recording_offset_seconds", 0);
-                session.PaddingBeforeSeconds = JsonHelper.ExtractInt(json, "padding_before_seconds", 10);
-                session.PaddingAfterSeconds = JsonHelper.ExtractInt(json, "padding_after_seconds", 20);
                 session.IsActive = JsonHelper.ExtractBool(json, "is_active", false);
 
                 // Parse markers
@@ -172,27 +168,18 @@ namespace StreamClipMarker.Core
             txt.AppendLine("TikTok LIVE STREAM CLIP MARKERS");
             txt.AppendLine("================================");
             txt.AppendLine();
-            txt.AppendLine("Session start:");
+            txt.AppendLine("Session:");
             txt.AppendLine(session.SessionStartLocal.ToString("yyyy-MM-dd HH:mm:ss"));
             txt.AppendLine();
-            txt.AppendLine("Session duration:");
+            txt.AppendLine("Duration:");
             txt.AppendLine(SessionTimer.FormatTime(session.DurationSeconds));
-            txt.AppendLine();
-            txt.AppendLine("Recording offset:");
-            txt.AppendLine(string.Format("{0}{1}s", session.RecordingOffsetSeconds >= 0 ? "+" : "", session.RecordingOffsetSeconds));
-            txt.AppendLine();
-            txt.AppendLine("Clip padding:");
-            txt.AppendLine(string.Format("Before: {0}s | After: {1}s", session.PaddingBeforeSeconds, session.PaddingAfterSeconds));
-            txt.AppendLine();
-            txt.AppendLine("Total markers:");
-            txt.AppendLine(session.Markers.Count.ToString());
             txt.AppendLine();
             txt.AppendLine("Markers:");
             txt.AppendLine();
 
             if (session.Markers.Count == 0)
             {
-                txt.AppendLine("  (No clips were marked during this session)");
+                txt.AppendLine("  (No markers were recorded during this session)");
             }
             else
             {
@@ -200,14 +187,8 @@ namespace StreamClipMarker.Core
                 {
                     ClipMarker m = session.Markers[i];
                     string markerTime = m.GetTimestamp(session.RecordingOffsetSeconds);
-                    string clipStart = m.GetClipStart(session.RecordingOffsetSeconds, session.PaddingBeforeSeconds);
-                    string clipEnd = m.GetClipEnd(session.RecordingOffsetSeconds, session.PaddingAfterSeconds);
-
-                    string noteSuffix = string.IsNullOrEmpty(m.Note) ? "" : string.Format(" - \"{0}\"", m.Note);
+                    string noteSuffix = string.IsNullOrEmpty(m.Note) ? "" : string.Format(" - {0}", m.Note);
                     txt.AppendLine(string.Format("{0:D2}. {1}{2}", i + 1, markerTime, noteSuffix));
-                    txt.AppendLine(string.Format("    Clip start: {0}", clipStart));
-                    txt.AppendLine(string.Format("    Clip end:   {0}", clipEnd));
-                    txt.AppendLine();
                 }
             }
 
@@ -217,31 +198,25 @@ namespace StreamClipMarker.Core
             StringBuilder json = new StringBuilder();
             json.AppendLine("{");
             json.AppendLine(string.Format("  \"session_start\": \"{0:yyyy-MM-ddTHH:mm:ss}\",", session.SessionStartLocal));
-            json.AppendLine(string.Format("  \"session_start_utc\": \"{0:o}\",", session.SessionStartUtc));
             json.AppendLine(string.Format("  \"duration\": \"{0}\",", SessionTimer.FormatTime(session.DurationSeconds)));
-            json.AppendLine(string.Format(CultureInfo.InvariantCulture, "  \"duration_seconds\": {0:F3},", session.DurationSeconds));
-            json.AppendLine(string.Format("  \"recording_offset_seconds\": {0},", session.RecordingOffsetSeconds));
-            json.AppendLine(string.Format("  \"padding_before_seconds\": {0},", session.PaddingBeforeSeconds));
-            json.AppendLine(string.Format("  \"padding_after_seconds\": {0},", session.PaddingAfterSeconds));
             json.AppendLine("  \"markers\": [");
 
             for (int i = 0; i < session.Markers.Count; i++)
             {
                 ClipMarker m = session.Markers[i];
-                double adjSec = m.GetAdjustedSeconds(session.RecordingOffsetSeconds);
-                double startSec = m.GetClipStartSeconds(session.RecordingOffsetSeconds, session.PaddingBeforeSeconds);
-                double endSec = m.GetClipEndSeconds(session.RecordingOffsetSeconds, session.PaddingAfterSeconds);
+                int seconds = (int)Math.Round(m.GetAdjustedSeconds(session.RecordingOffsetSeconds));
 
                 json.AppendLine("    {");
-                json.AppendLine(string.Format("      \"id\": {0},", m.Id));
                 json.AppendLine(string.Format("      \"timestamp\": \"{0}\",", m.GetTimestamp(session.RecordingOffsetSeconds)));
-                json.AppendLine(string.Format(CultureInfo.InvariantCulture, "      \"seconds\": {0:F1},", adjSec));
-                json.AppendLine(string.Format("      \"clip_start\": \"{0}\",", m.GetClipStart(session.RecordingOffsetSeconds, session.PaddingBeforeSeconds)));
-                json.AppendLine(string.Format(CultureInfo.InvariantCulture, "      \"clip_start_seconds\": {0:F1},", startSec));
-                json.AppendLine(string.Format("      \"clip_end\": \"{0}\",", m.GetClipEnd(session.RecordingOffsetSeconds, session.PaddingAfterSeconds)));
-                json.AppendLine(string.Format(CultureInfo.InvariantCulture, "      \"clip_end_seconds\": {0:F1},", endSec));
-                json.AppendLine(string.Format("      \"raw_elapsed_seconds\": {0:F3},", m.RawSeconds));
-                json.AppendLine(string.Format("      \"note\": \"{0}\"", JsonHelper.Escape(m.Note)));
+                if (!string.IsNullOrEmpty(m.Note))
+                {
+                    json.AppendLine(string.Format("      \"seconds\": {0},", seconds));
+                    json.AppendLine(string.Format("      \"note\": \"{0}\"", JsonHelper.Escape(m.Note)));
+                }
+                else
+                {
+                    json.AppendLine(string.Format("      \"seconds\": {0}", seconds));
+                }
 
                 if (i < session.Markers.Count - 1)
                 {
@@ -259,18 +234,41 @@ namespace StreamClipMarker.Core
             File.WriteAllText(jsonPath, json.ToString(), Encoding.UTF8);
 
             // 3. Build CSV export (clips.csv and session-specific CSV)
+            bool anyNotes = false;
+            for (int i = 0; i < session.Markers.Count; i++)
+            {
+                if (!string.IsNullOrEmpty(session.Markers[i].Note))
+                {
+                    anyNotes = true;
+                    break;
+                }
+            }
+
             StringBuilder csv = new StringBuilder();
-            csv.AppendLine("Clip,Marker,Start,End,Note");
+            if (anyNotes)
+            {
+                csv.AppendLine("Marker,Timestamp,Seconds,Note");
+            }
+            else
+            {
+                csv.AppendLine("Marker,Timestamp,Seconds");
+            }
 
             for (int i = 0; i < session.Markers.Count; i++)
             {
                 ClipMarker m = session.Markers[i];
                 string markerTime = m.GetTimestamp(session.RecordingOffsetSeconds);
-                string clipStart = m.GetClipStart(session.RecordingOffsetSeconds, session.PaddingBeforeSeconds);
-                string clipEnd = m.GetClipEnd(session.RecordingOffsetSeconds, session.PaddingAfterSeconds);
-                string note = EscapeCsv(m.Note);
+                int seconds = (int)Math.Round(m.GetAdjustedSeconds(session.RecordingOffsetSeconds));
 
-                csv.AppendLine(string.Format("{0},{1},{2},{3},{4}", i + 1, markerTime, clipStart, clipEnd, note));
+                if (anyNotes)
+                {
+                    string note = EscapeCsv(m.Note);
+                    csv.AppendLine(string.Format("{0},{1},{2},{3}", i + 1, markerTime, seconds, note));
+                }
+                else
+                {
+                    csv.AppendLine(string.Format("{0},{1},{2}", i + 1, markerTime, seconds));
+                }
             }
 
             File.WriteAllText(csvPath, csv.ToString(), Encoding.UTF8);

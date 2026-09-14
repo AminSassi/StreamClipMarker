@@ -295,9 +295,8 @@ namespace StreamClipMarker
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
             };
             _lstMarkers.Columns.Add("#", 38);
-            _lstMarkers.Columns.Add("Marker", 78);
-            _lstMarkers.Columns.Add("Clip Range", 130);
-            _lstMarkers.Columns.Add("Note / Label", 90);
+            _lstMarkers.Columns.Add("Timestamp", 100);
+            _lstMarkers.Columns.Add("Note / Bookmark Label", 200);
             _lstMarkers.DoubleClick += (s, e) => MenuEdit_Click(s, e);
             pnlMain.Controls.Add(_lstMarkers);
 
@@ -445,10 +444,10 @@ namespace StreamClipMarker
             int count = (_currentSession != null) ? _currentSession.Markers.Count : 0;
 
             // Keep within 63 characters for safety on all Windows versions
-            string tip = string.Format("StreamClipMarker\nRec: {0} | Clips: {1}\nLast: {2}", stateStr, count, _lastMarkerFormatted);
+            string tip = string.Format("StreamClipMarker\nRec: {0} | Markers: {1}\nLast: {2}", stateStr, count, _lastMarkerFormatted);
             if (tip.Length > 63)
             {
-                tip = string.Format("StreamClipMarker: {0}\nClips: {1}", stateStr, count);
+                tip = string.Format("StreamClipMarker: {0}\nMarkers: {1}", stateStr, count);
             }
             try
             {
@@ -584,13 +583,13 @@ namespace StreamClipMarker
                             _timer.StartWithOffset(recovered.DurationSeconds);
 
                             RefreshMarkersList();
-                            _lblClipsCount.Text = string.Format("CLIPS MARKED: {0}", _currentSession.Markers.Count);
+                            _lblClipsCount.Text = string.Format("MARKERS: {0}", _currentSession.Markers.Count);
                             SetState(SessionState.Active);
                             ClockTimer_Tick(this, EventArgs.Empty);
 
                             if (_config.EnableToast)
                             {
-                                _toast.ShowToast("SESSION RESUMED", string.Format("Resumed with {0} saved clips.", recovered.Markers.Count), false);
+                                _toast.ShowToast("SESSION RESUMED", string.Format("Resumed with {0} saved markers.", recovered.Markers.Count), false);
                             }
                         }
                         else if (recoveryForm.UserAction == RecoveryAction.Finalize)
@@ -771,13 +770,11 @@ namespace StreamClipMarker
                 SessionStartLocal = DateTime.Now,
                 SessionStartUtc = DateTime.UtcNow,
                 RecordingOffsetSeconds = _config.RecordingOffsetSeconds,
-                PaddingBeforeSeconds = _config.PaddingBeforeSeconds,
-                PaddingAfterSeconds = _config.PaddingAfterSeconds,
                 IsActive = true
             };
 
             _lstMarkers.Items.Clear();
-            _lblClipsCount.Text = "CLIPS MARKED: 0";
+            _lblClipsCount.Text = "MARKERS: 0";
             _lastMarkerRawSeconds = -999;
             _lastMarkerFormatted = "--:--:--";
 
@@ -842,22 +839,19 @@ namespace StreamClipMarker
             string timeStr = marker.GetTimestamp(_currentSession.RecordingOffsetSeconds);
             _lastMarkerFormatted = timeStr;
             AddMarkerToUI(marker);
-            _lblClipsCount.Text = string.Format("CLIPS MARKED: {0}", _currentSession.Markers.Count);
+            _lblClipsCount.Text = string.Format("MARKERS: {0}", _currentSession.Markers.Count);
             UpdateTrayTooltip();
 
-            string rangeStr = string.Format("Clip: {0} → {1}",
-                marker.GetClipStart(_currentSession.RecordingOffsetSeconds, _currentSession.PaddingBeforeSeconds),
-                marker.GetClipEnd(_currentSession.RecordingOffsetSeconds, _currentSession.PaddingAfterSeconds));
-
+            string feedbackSubtitle = "Bookmark reference point recorded";
             if (rapidPress)
             {
-                rangeStr += " (rapid press recorded)";
+                feedbackSubtitle += " [rapid mark]";
             }
 
             // Non-blocking toast feedback
             if (_config.EnableToast)
             {
-                _toast.ShowToast(string.Format("CLIP MARKED — {0}", timeStr), rangeStr, _config.EnableSound);
+                _toast.ShowToast(string.Format("MARKER SAVED — {0}", timeStr), feedbackSubtitle, _config.EnableSound);
             }
             else if (_config.EnableSound)
             {
@@ -870,8 +864,8 @@ namespace StreamClipMarker
                 BeginInvoke(new Action(() =>
                 {
                     string input = ShowInputDialog(
-                        string.Format("Enter label for Clip #{0} ({1}):", marker.Id, timeStr),
-                        "Clip Label", marker.Note);
+                        string.Format("Enter label for Bookmark #{0} ({1}):", marker.Id, timeStr),
+                        "Bookmark Label", marker.Note);
                     if (input != null)
                     {
                         marker.Note = input.Trim();
@@ -885,13 +879,9 @@ namespace StreamClipMarker
         private void AddMarkerToUI(ClipMarker m)
         {
             string markerTime = m.GetTimestamp(_currentSession.RecordingOffsetSeconds);
-            string range = string.Format("{0} - {1}",
-                m.GetClipStart(_currentSession.RecordingOffsetSeconds, _currentSession.PaddingBeforeSeconds),
-                m.GetClipEnd(_currentSession.RecordingOffsetSeconds, _currentSession.PaddingAfterSeconds));
 
             ListViewItem item = new ListViewItem(m.Id.ToString());
             item.SubItems.Add(markerTime);
-            item.SubItems.Add(range);
             item.SubItems.Add(m.Note);
             item.Tag = m;
 
@@ -910,7 +900,7 @@ namespace StreamClipMarker
                 m.Id = i + 1;
                 AddMarkerToUI(m);
             }
-            _lblClipsCount.Text = string.Format("CLIPS MARKED: {0}", _currentSession.Markers.Count);
+            _lblClipsCount.Text = string.Format("MARKERS: {0}", _currentSession.Markers.Count);
         }
 
         private void EndSession(bool isAutomatic = false)
@@ -1055,7 +1045,7 @@ namespace StreamClipMarker
             if (input != null)
             {
                 m.Note = input.Trim();
-                item.SubItems[3].Text = m.Note;
+                item.SubItems[2].Text = m.Note;
                 if (_currentSession != null)
                 {
                     SessionStorage.SaveCurrentSession(_currentSession);

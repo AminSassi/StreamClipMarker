@@ -1,5 +1,6 @@
-Clip,Marker,Start,End,Note
-1,00:12:43,00:12:33,00:13:03,Funny chat donation reaction
-2,00:27:18,00:27:08,00:27:38,1v4 clutch play
-3,00:41:06,00:40:56,00:41:26,Game glitch
-4,01:03:52,01:03:42,01:04:12,Victory screen & dance
+Marker,Timestamp,Seconds
+1,00:12:43,763
+2,00:27:18,1638
+3,00:41:06,2466
+4,01:04:51,3891
+5,01:37:22,5842

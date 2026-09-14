@@ -48,9 +48,9 @@ class SimulatedStorage:
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(data, f)
         with open(csv_path, "w", encoding="utf-8") as f:
-            f.write("Clip,Marker,Start,End,Note\n")
+            f.write("Marker,Timestamp,Seconds,Note\n")
             for m in data['markers']:
-                f.write(f"{m['id']},{m['timestamp']},00:00:00,00:00:20,{m.get('note','')}\n")
+                f.write(f"{m['id']},{m['timestamp']},{int(m['raw_seconds'])},{m.get('note','')}\n")
 
         self.action_delete()
         return txt_path, json_path, csv_path

@@ -84,7 +84,7 @@ namespace StreamClipMarker
                 Text = string.Format(
                     "Started:    {0:yyyy-MM-dd HH:mm:ss}\n" +
                     "Duration:   {1}\n" +
-                    "Markers:    {2} clip(s) saved",
+                    "Markers:    {2} bookmark(s) saved",
                     session.SessionStartLocal,
                     SessionTimer.FormatTime(session.DurationSeconds),
                     session.Markers.Count),
@@ -110,18 +110,14 @@ namespace StreamClipMarker
                 Font = new Font("Segoe UI", 8.5f)
             };
             lstPreview.Columns.Add("#", 36);
-            lstPreview.Columns.Add("Marker", 80);
-            lstPreview.Columns.Add("Clip Range", 160);
-            lstPreview.Columns.Add("Note", 110);
+            lstPreview.Columns.Add("Timestamp", 90);
+            lstPreview.Columns.Add("Note / Label", 260);
 
             for (int i = 0; i < session.Markers.Count; i++)
             {
                 ClipMarker m = session.Markers[i];
                 ListViewItem lvi = new ListViewItem((i + 1).ToString());
                 lvi.SubItems.Add(m.GetTimestamp(session.RecordingOffsetSeconds));
-                lvi.SubItems.Add(string.Format("{0} - {1}",
-                    m.GetClipStart(session.RecordingOffsetSeconds, session.PaddingBeforeSeconds),
-                    m.GetClipEnd(session.RecordingOffsetSeconds, session.PaddingAfterSeconds)));
                 lvi.SubItems.Add(m.Note);
                 lstPreview.Items.Add(lvi);
             }

@@ -33,28 +33,5 @@ namespace StreamClipMarker.Core
         {
             return SessionTimer.FormatTime(GetAdjustedSeconds(recordingOffsetSeconds));
         }
-
-        public double GetClipStartSeconds(int recordingOffsetSeconds, int paddingBeforeSeconds)
-        {
-            double adjusted = GetAdjustedSeconds(recordingOffsetSeconds);
-            double start = adjusted - paddingBeforeSeconds;
-            return start < 0 ? 0 : start;
-        }
-
-        public string GetClipStart(int recordingOffsetSeconds, int paddingBeforeSeconds)
-        {
-            return SessionTimer.FormatTime(GetClipStartSeconds(recordingOffsetSeconds, paddingBeforeSeconds));
-        }
-
-        public double GetClipEndSeconds(int recordingOffsetSeconds, int paddingAfterSeconds)
-        {
-            double adjusted = GetAdjustedSeconds(recordingOffsetSeconds);
-            return adjusted + paddingAfterSeconds;
-        }
-
-        public string GetClipEnd(int recordingOffsetSeconds, int paddingAfterSeconds)
-        {
-            return SessionTimer.FormatTime(GetClipEndSeconds(recordingOffsetSeconds, paddingAfterSeconds));
-        }
     }
 }

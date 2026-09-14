@@ -5,18 +5,18 @@ An ultra-lightweight Windows desktop utility for livestream clip timestamp marki
 ![Logo](resources/logo.png)
 
 [![GitHub Release](https://img.shields.io/github/v/release/AminSassi/StreamClipMarker?color=00e68a&label=Release)](https://github.com/AminSassi/StreamClipMarker/releases/latest)
-[![Download Binary](https://img.shields.io/badge/Download-StreamClipMarker.exe-00b4d8?logo=windows)](https://github.com/AminSassi/StreamClipMarker/releases/download/v1.2.0/StreamClipMarker.exe)
+[![Download Binary](https://img.shields.io/badge/Download-StreamClipMarker.exe-00b4d8?logo=windows)](https://github.com/AminSassi/StreamClipMarker/releases/download/v1.3.0/StreamClipMarker.exe)
 [![Build Status](https://github.com/AminSassi/StreamClipMarker/actions/workflows/build.yml/badge.svg)](https://github.com/AminSassi/StreamClipMarker/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> 🚀 **[Click here to download StreamClipMarker.exe (v1.2.0)](https://github.com/AminSassi/StreamClipMarker/releases/download/v1.2.0/StreamClipMarker.exe)** — Standalone Windows binary (~103 KB), no installation or runtimes required!
+> 🚀 **[Click here to download StreamClipMarker.exe (v1.3.0)](https://github.com/AminSassi/StreamClipMarker/releases/download/v1.3.0/StreamClipMarker.exe)** — Standalone Windows binary (~103 KB), no installation or runtimes required!
 
 ---
 
 ## The Problem & The Solution
 
 - **The Problem:** TikTok LIVE Studio and other streaming apps automatically save your entire livestream recording to your PC after the stream ends, but don't have an instant clipping replay buffer. Using NVIDIA Instant Replay or OBS replay buffers often fails to capture your live overlays and eats valuable GPU, CPU, and RAM while gaming.
-- **The Solution:** You already have the full livestream recording being saved! You don't need a second video recorder. **StreamClipMarker** runs quietly in your taskbar, auto-detects when your stream starts and stops, and records the exact elapsed timestamps whenever you press a global hotkey (**`F8`**). When your stream ends, you get clean human-readable and machine-readable marker files with pre-calculated cut points.
+- **The Solution:** You already have the full livestream recording being saved! You don't need a second video recorder. **StreamClipMarker** is a **pure bookmarking/reference point system**, not a video editor. It runs quietly in your taskbar, auto-detects when your stream starts and stops, and records the exact elapsed timestamps whenever you press a global hotkey (**`F8`**). Later, you open the full recording in **Adobe Premiere Pro**, navigate directly to the bookmarked timestamps, review the surrounding footage, and manually decide exact cut boundaries. No video processing, no FFmpeg, and no artificial clip padding!
 
 ---
 
@@ -87,81 +87,70 @@ Every marker is **immediately written to disk** (`current_session.json`) the mom
 - **Dynamic Tray Tooltip:** Hovering over the tray icon displays live status:
   ```
   StreamClipMarker
-  Rec: ACTIVE | Clips: 4
+  Rec: ACTIVE | Markers: 4
   Last: 00:27:18
   ```
 - **Right-click the tray icon** at any time to:
   - 🖥️ **Open StreamClipMarker** (or double-click the icon)
   - ⏱️ **Start / End Session**
-  - 🎬 **Mark Clip (F8)**
+  - 🎬 **Mark Bookmark (F8)**
   - ⚙️ **Settings**
   - ❌ **Exit Application** (safely saves any running session and closes the app completely)
 
 ---
 
-## 📋 Dual Clean Exports + CSV
+## 📋 Bookmark Exports (CSV, TXT, JSON)
 
 Saved automatically to `Documents\StreamClipMarker\TikTok_Stream_YYYY-MM-DD_HH-mm-ss.*` (and `clips.csv`):
 
 ### 1. CSV (`clips.csv` & session CSV)
 ```csv
-Clip,Marker,Start,End,Note
-1,00:12:43,00:12:33,00:13:03,Funny chat donation reaction
-2,00:27:18,00:27:08,00:27:38,1v4 clutch play
-3,00:41:06,00:40:56,00:41:26,Game glitch
-4,01:03:52,01:03:42,01:04:12,Victory screen & dance
+Marker,Timestamp,Seconds
+1,00:12:43,763
+2,00:27:18,1638
+3,00:41:06,2466
+4,01:04:51,3891
+5,01:37:22,5842
 ```
+*(If custom labels are entered via `Ctrl+F8`, a `Note` column is included automatically: `Marker,Timestamp,Seconds,Note`)*.
 
 ### 2. Human-Readable (`.txt`)
 ```text
 TikTok LIVE STREAM CLIP MARKERS
 ================================
 
-Session start:
+Session:
 2026-09-14 19:32:14
 
-Session duration:
-01:43:27
-
-Recording offset:
-+0s
-
-Clip padding:
-Before: 10s | After: 20s
-
-Total markers:
-4
+Duration:
+02:13:42
 
 Markers:
 
-01. 00:12:43 - "Funny chat donation reaction"
-    Clip start: 00:12:33
-    Clip end:   00:13:03
-
-02. 00:27:18 - "1v4 clutch play"
-    Clip start: 00:27:08
-    Clip end:   00:27:38
+01. 00:12:43
+02. 00:27:18
+03. 00:41:06
+04. 01:04:51
+05. 01:37:22
 ```
 
 ### 3. Machine-Readable (`.json`)
 ```json
 {
   "session_start": "2026-09-14T19:32:14",
-  "duration": "01:43:27",
-  "duration_seconds": 6207.0,
-  "recording_offset_seconds": 0,
-  "padding_before_seconds": 10,
-  "padding_after_seconds": 20,
+  "duration": "02:13:42",
   "markers": [
     {
-      "id": 1,
       "timestamp": "00:12:43",
-      "seconds": 763.0,
-      "clip_start": "00:12:33",
-      "clip_start_seconds": 753.0,
-      "clip_end": "00:13:03",
-      "clip_end_seconds": 783.0,
-      "note": "Funny chat donation reaction"
+      "seconds": 763
+    },
+    {
+      "timestamp": "00:27:18",
+      "seconds": 1638
+    },
+    {
+      "timestamp": "00:41:06",
+      "seconds": 2466
     }
   ]
 }
@@ -169,10 +158,13 @@ Markers:
 
 ---
 
-## ⏱️ Recording Time Offset & Padding
+## ⏱️ Recording Time Offset
 
-- **Recording Offset:** Quick `[-]` and `[+]` buttons live on the main window. If TikTok's recording started 3 seconds before you clicked Start Session, setting offset to `+3s` shifts all markers so they align with the saved video file!
-- **Padding:** Default 10 seconds before, 20 seconds after (configurable in Settings). Early stream markers automatically clamp safely to `00:00:00`.
+- **Adjust Reference Timestamp:** The marker session and the video recording file may not begin at the exact same millisecond. The offset feature simply adjusts the bookmark reference time.
+  - Example: You press F8 at `01:23:47`. If your recording started 3 seconds before the session timer, setting recording offset to `+3s` adjusts the reference bookmark to `01:23:50`!
+  - Quick `[-]` and `[+]` adjustment buttons live directly on the main window.
+  - Negative offsets clamp safely at `00:00:00`.
+- **Zero Video Cutting Assumptions:** StreamClipMarker answers only *"Where in my livestream did I bookmark this moment?"* You make all clipping and boundary decisions manually in Adobe Premiere Pro after reviewing the surrounding footage.
 
 ---
 
